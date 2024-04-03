@@ -473,15 +473,15 @@ calc_size() {
 ip_info() {
     echo " Basic Network Info"
     next
-    local net_type="$(wget -T 5 -qO- http://ip6.me/api/ | cut -d, -f1)"
+    local net_type="$(curl -m 5 -sL http://ip6.me/api/ | cut -d, -f1)"
 
-    local ipv4_check=$((ping -4 -c 1 -W 4 ipv4.google.com >/dev/null 2>&1 && echo true) || wget -qO- -T 5 -4 icanhazip.com 2> /dev/null)
-    local ipv6_check=$((ping -6 -c 1 -W 4 ipv6.google.com >/dev/null 2>&1 && echo true) || wget -qO- -T 5 -6 icanhazip.com 2> /dev/null)
+    local ipv4_check=$((ping -4 -c 1 -W 4 ipv4.google.com >/dev/null 2>&1 && echo true) || curl -m 5 -sL -4 icanhazip.com 2> /dev/null)
+    local ipv6_check=$((ping -6 -c 1 -W 4 ipv6.google.com >/dev/null 2>&1 && echo true) || curl -m 5 -sL -6 icanhazip.com 2> /dev/null)
 
-    local net_ip="$(wget -T 5 -qO- ipconfig.io)"
+    local net_ip="$(curl -m 5 -sL ipconfig.io)"
 
     # IP-API Details - IPv6/IPv4
-    local response=$(wget -qO- -T 5 http://ip-api.com/json/$net_ip)
+    local response=$(curl -m 5 -sL http://ip-api.com/json/$net_ip)
 
     local country=$(echo "$response" | grep -Po '"country": *\K"[^"]*"')
     local country=${country//\"}
@@ -506,7 +506,7 @@ ip_info() {
 
     # IPINFO.IO Details - IPv4 only
 
-    local response_ipv4=$(wget -qO- -T 5 ipinfo.io)
+    local response_ipv4=$(curl -m 5 -sL ipinfo.io)
 
     local ipv4_city=$(echo "$response_ipv4" | grep -Po '"city": *\K"[^"]*"')
     local ipv4_city=${ipv4_city//\"}
@@ -590,9 +590,9 @@ install_speedtest() {
         [ -z "${sys_bit}" ] && _red "Error: Unsupported system architecture (${sysarch}).\n" && exit 1
         url1="https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-${sys_bit}.tgz"
         url2="https://dl.lamp.sh/files/ookla-speedtest-1.2.0-linux-${sys_bit}.tgz"
-        wget --no-check-certificate -q -T10 -O speedtest.tgz ${url1}
+        curl -k -sL -m 10 -o speedtest.tgz ${url1}
         if [ $? -ne 0 ]; then
-            wget --no-check-certificate -q -T10 -O speedtest.tgz ${url2}
+            curl -k -s -m 10 -o speedtest.tgz ${url2}
             [ $? -ne 0 ] && _red "Error: Failed to download speedtest-cli.\n" && exit 1
         fi
         mkdir -p speedtest-cli && tar zxf speedtest.tgz -C ./speedtest-cli && chmod +x ./speedtest-cli/speedtest
@@ -608,8 +608,8 @@ print_intro() {
     echo "      A simple script to test network performance using speedtest-cli      "
     next
     echo " Version            : $(_green v2024.03.15)"
-    echo " Global Speedtest   : $(_red "wget -qO- network-speed.xyz | bash")"
-    echo " Region Speedtest   : $(_red "wget -qO- network-speed.xyz | bash -s -- -r <region>")"
+    echo " Global Speedtest   : $(_red "curl -sL network-speed.xyz | bash")"
+    echo " Region Speedtest   : $(_red "curl -sL network-speed.xyz | bash -s -- -r <region>")"
 }
 
 # Get System information
@@ -718,7 +718,7 @@ print_end_time() {
 }
 
 get_runs_counter() {
-    local counter=$(wget -qO- https://runs.network-speed.xyz/)
+    local counter=$(curl -sL https://runs.network-speed.xyz/)
 
     if [[ -n "$counter" ]]; then
         echo " Total Script Runs  : $(_green "$counter")"
@@ -726,7 +726,7 @@ get_runs_counter() {
 }
 
 run_speed_sh() {
-    ! _exists "wget" && _red "network-speed.xyz is unable to run.\nError: wget command not found.\n" && kill -INT $$ && exit 1
+    ! _exists "curl" && _red "network-speed.xyz is unable to run.\nError: curl command not found.\n" && kill -INT $$ && exit 1
     ! _exists "free" && _red "network-speed.xyz is unable to run.\nError: free command not found.\n" && kill -INT $$ && exit 1
 
     start_time=$(date +%s)
